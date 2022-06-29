@@ -45,10 +45,12 @@ class GATLayer(nn.Module):
 class BACPI(nn.Module):
     def __init__(self, task, n_atom, n_amino, params):
         super(BACPI, self).__init__()
-
         comp_dim, prot_dim, gat_dim, num_head, dropout, alpha, window, layer_cnn, latent_dim, layer_out = \
-            params['comp_dim'], params['prot_dim'], params['gat_dim'], params['num_head'], params['dropout'], params['alpha'],\
-            params['window'], params['layer_cnn'], params['latent_dim'], params['layer_out']
+            params.comp_dim, params.prot_dim, params.gat_dim, params.num_head, params.dropout, params.alpha,\
+            params.window, params.layer_cnn, params.latent_dim, params.layer_out
+#        comp_dim, prot_dim, gat_dim, num_head, dropout, alpha, window, layer_cnn, latent_dim, layer_out = \
+#            params['comp_dim'], params['prot_dim'], params['gat_dim'], params['num_head'], params['dropout'], params['alpha'],\
+#            params['window'], params['layer_cnn'], params['latent_dim'], params['layer_out']
 
         self.embedding_layer_atom = nn.Embedding(n_atom+1, comp_dim)
         self.embedding_layer_amino = nn.Embedding(n_amino+1, prot_dim)
@@ -169,9 +171,12 @@ class BACPI_DEEPCCA(nn.Module):
     def __init__(self, task, n_atom, n_amino, params):
         super(BACPI_DEEPCCA, self).__init__()
 
+
+
         comp_dim, prot_dim, gat_dim, num_head, dropout, alpha, window, layer_cnn, latent_dim, layer_out = \
-            params['comp_dim'], params['prot_dim'], params['gat_dim'], params['num_head'], params['dropout'], params['alpha'],\
-            params['window'], params['layer_cnn'], params['latent_dim'], params['layer_out']
+            params.comp_dim, params.prot_dim, params.gat_dim, params.num_head, params.dropout, params.alpha,\
+            params.window, params.layer_cnn, params.latent_dim, params.layer_out
+
 
         self.embedding_layer_atom = nn.Embedding(n_atom+1, comp_dim)
         self.embedding_layer_amino = nn.Embedding(n_amino+1, prot_dim)
@@ -215,7 +220,7 @@ class BACPI_DEEPCCA(nn.Module):
         self.comb_p = nn.Linear(latent_dim * self.bidat_num, latent_dim)
         # need to change to fit new feature space 12800->13600
         if task == 'affinity':
-            self.output = nn.Linear(latent_dim * latent_dim * 2, 1)
+            self.output = nn.Linear(latent_dim * (latent_dim+5) * 2, 1)
         elif task == 'interaction':
             self.output = nn.Linear(latent_dim * (latent_dim+5) * 2, 2)
         else:

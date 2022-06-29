@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from model import BACPI
 from utils import *
 from data_process import training_data_process
-
+from model import BACPI_DEEPCCA
 
 args = argparse.ArgumentParser(description='Argparse for compound-protein interactions prediction')
 args.add_argument('-task', type=str, default='interaction', help='affinity/interaction')
@@ -43,6 +43,7 @@ args.add_argument('-layer_out', type=int, default=3, help='number of output laye
 params, _ = args.parse_known_args()
 
 
+
 def train_eval(model, task, data_train, data_dev, data_test, device, params):
     if task == 'affinity':
         criterion = F.mse_loss
@@ -52,8 +53,8 @@ def train_eval(model, task, data_train, data_dev, data_test, device, params):
         best_res = 0
     else:
         print("Please choose a correct mode!!!")
-        return 
-    
+        return
+
     optimizer = optim.Adam(model.parameters(), lr=params.lr, weight_decay=0, amsgrad=True)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
     idx = np.arange(len(data_train[0]))
@@ -67,8 +68,10 @@ def train_eval(model, task, data_train, data_dev, data_test, device, params):
         labels = []
         for i in range(math.ceil(len(data_train[0]) / batch_size)):
             batch_data = [data_train[di][idx[i * batch_size: (i + 1) * batch_size]] for di in range(len(data_train))]
-            atoms_pad, atoms_mask, adjacencies_pad, batch_fps, amino_pad, amino_mask, label = batch2tensor(batch_data, device)
-            pred = model(atoms_pad, atoms_mask, adjacencies_pad, amino_pad, amino_mask, batch_fps)
+            # added new feature
+            atoms_pad, atoms_mask, adjacencies_pad, batch_fps, amino_pad, amino_mask, label, batch_new_feature = batch2tensor(batch_data, device)
+
+            pred = model(atoms_pad, atoms_mask, adjacencies_pad, amino_pad, amino_mask, batch_fps, batch_new_feature)
             if task == 'affinity':
                 loss = criterion(pred.float(), label.float())
                 predictions += pred.cpu().detach().numpy().reshape(-1).tolist()
@@ -105,7 +108,7 @@ def train_eval(model, task, data_train, data_dev, data_test, device, params):
                 best_res = rmse_dev
                 # torch.save(model, '../checkpoint/best_model_affinity.pth')
                 res = [rmse_test, pearson_test, spearman_test]
-        
+
         else:
             print(' ')
             pred_labels = np.array(pred_labels)
@@ -136,9 +139,9 @@ def test(model, task, data_test, batch_size, device):
     labels = []
     for i in range(math.ceil(len(data_test[0]) / batch_size)):
         batch_data = [data_test[di][i * batch_size: (i + 1) * batch_size] for di in range(len(data_test))]
-        atoms_pad, atoms_mask, adjacencies_pad, batch_fps, amino_pad, amino_mask, label = batch2tensor(batch_data, device)
+        atoms_pad, atoms_mask, adjacencies_pad, batch_fps, amino_pad, amino_mask, label, batch_new_feature = batch2tensor(batch_data, device)
         with torch.no_grad():
-            pred = model(atoms_pad, atoms_mask, adjacencies_pad, amino_pad, amino_mask, batch_fps)
+            pred = model(atoms_pad, atoms_mask, adjacencies_pad, amino_pad, amino_mask, batch_fps, batch_new_feature)
         if task == 'affinity':
             predictions += pred.cpu().detach().numpy().reshape(-1).tolist()
             labels += label.cpu().numpy().reshape(-1).tolist()
@@ -157,6 +160,18 @@ def test(model, task, data_test, batch_size, device):
         auc_value, acc_value, aupr_value = classification_scores(labels, predictions, pred_labels)
         return auc_value, acc_value, aupr_value
 
+## modified to run on ABCI
+
+
+def load_new_feature(datadir, target_type, datapack):
+    if target_type:
+        dir_input = datadir + '/' + target_type + '/'
+    else:
+        dir_input = datadir + '/'
+    print(dir_input + 'new_feature_' + target_type + '.npy')
+    new_feature = np.load(dir_input + 'new_feature_' + target_type + '.npy')
+    datapack.append(new_feature)
+    return datapack
 
 if __name__ == '__main__':
     
@@ -182,13 +197,17 @@ if __name__ == '__main__':
     print('Load data...')
     train_data = load_data(data_dir, 'train')
     test_data = load_data(data_dir, 'test')
+    # newly added
+    train_data = load_new_feature(data_dir, 'train', train_data)
+    test_data = load_new_feature(data_dir, 'test', test_data)
+
     train_data, dev_data = split_data(train_data, 0.1)
 
     atom_dict = pickle.load(open(data_dir + '/atom_dict', 'rb'))
     amino_dict = pickle.load(open(data_dir + '/amino_dict', 'rb'))
 
     print('training...')
-    model = BACPI(task, len(atom_dict), len(amino_dict), params)
+    model = BACPI_DEEPCCA(task, len(atom_dict), len(amino_dict), params)
     model.to(device)
     res = train_eval(model, task, train_data, dev_data, test_data, device, params)
 
