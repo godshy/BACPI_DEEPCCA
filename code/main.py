@@ -160,7 +160,7 @@ def test(model, task, data_test, batch_size, device):
 
 if __name__ == '__main__':
     
-    print(params)
+    print('params: ', params)
     task = params.task
     dataset = params.dataset
 

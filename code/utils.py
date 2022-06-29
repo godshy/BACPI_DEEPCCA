@@ -6,7 +6,7 @@ from scipy import stats
 from sklearn import metrics
 from sklearn.metrics import roc_auc_score, accuracy_score, precision_recall_curve
 
-
+# train_data has [compounds, adjacencies, fingerprint, proteins, interactions, features_created_by_deepcca]
 def batch_pad(arr):
     N = max([a.shape[0] for a in arr])
     if arr[0].ndim == 1:
@@ -36,11 +36,16 @@ def fps2number(arr):
 
 
 def batch2tensor(batch_data, device):
-    atoms_pad, atoms_mask = batch_pad(batch_data[0])
-    adjacencies_pad, _ = batch_pad(batch_data[1])
-    fps = fps2number(batch_data[2])
-    amino_pad, amino_mask = batch_pad(batch_data[3])
-
+    atoms_pad, atoms_mask = batch_pad(batch_data[0])  # compounds
+    # print('atoms_pad shape: ', atoms_pad.shape)
+    # print('atoms_mask shape: ', atoms_mask.shape)
+    adjacencies_pad, _ = batch_pad(batch_data[1])  # adjancencies
+    # print('adjacencies_pad shape: ', adjacencies_pad.shape)
+    fps = fps2number(batch_data[2])  # fingerprint
+    # print('fps shape ', fps.shape)
+    amino_pad, amino_mask = batch_pad(batch_data[3])  #  proteins
+    # print('amino_pad shape:', amino_pad.shape)
+    # print('amino_mask shape:', amino_mask.shape)
     atoms_pad = Variable(torch.LongTensor(atoms_pad)).to(device)
     atoms_mask = Variable(torch.FloatTensor(atoms_mask)).to(device)
     adjacencies_pad = Variable(torch.LongTensor(adjacencies_pad)).to(device)
@@ -48,9 +53,13 @@ def batch2tensor(batch_data, device):
     amino_pad = Variable(torch.LongTensor(amino_pad)).to(device)
     amino_mask = Variable(torch.FloatTensor(amino_mask)).to(device)
 
-    label = torch.FloatTensor(batch_data[4]).to(device)
+    # modified to add new feature
+    new_feature = Variable(torch.FloatTensor(batch_data[5])).to(device)
+    ##
 
-    return atoms_pad, atoms_mask, adjacencies_pad, fps, amino_pad, amino_mask, label
+    label = torch.FloatTensor(batch_data[4]).to(device)  # interactions
+
+    return atoms_pad, atoms_mask, adjacencies_pad, fps, amino_pad, amino_mask, label, new_feature
 
 
 def load_data(datadir, target_type):
@@ -64,7 +73,13 @@ def load_data(datadir, target_type):
     proteins = np.load(dir_input + 'proteins.npy', allow_pickle=True)
     interactions = np.load(dir_input + 'interactions.npy', allow_pickle=True)
     data_pack = [compounds, adjacencies, fingerprint, proteins, interactions]
+    # print('compounds.shape', compounds.shape)
+    # print('adj.shape', adjacencies.shape)
+    # print('fingerprint.shape', fingerprint.shape)
+    # print('proteins.shape', proteins.shape)
+
     return data_pack
+
 
 
 def split_data(train_data, ratio=0.1):
