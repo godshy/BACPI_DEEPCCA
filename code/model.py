@@ -415,7 +415,7 @@ class BACPI_DEEPCCA_NOECFP(nn.Module):
         # cf_final_1 = torch.cat([cf_final.view(b, -1), new_feature.view(b, -1)], dim=1)
         #modified
         cf_final_1 = torch.cat([self.comb_c(cat_cf).view(b, -1), new_feature.view(b, -1)], dim=1)
-        # print('cf_final_1:', cf_final_1.shape)
+        print('cf_final_1:', cf_final_1.shape)
         #
         pf_final = self.comb_p(cat_pf)
         # print('cf_final_shape:', cf_final.view(b, -1, 1).shape)
