@@ -5,6 +5,10 @@ from math import sqrt
 from scipy import stats
 from sklearn import metrics
 from sklearn.metrics import roc_auc_score, accuracy_score, precision_recall_curve
+import random
+random.seed(0)
+torch.manual_seed(0)
+np.random.seed(0)
 
 # train_data has [compounds, adjacencies, fingerprint, proteins, interactions, features_created_by_deepcca]
 def batch_pad(arr):
