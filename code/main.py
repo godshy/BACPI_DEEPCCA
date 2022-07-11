@@ -13,9 +13,7 @@ from data_process import training_data_process
 from model import BACPI_DEEPCCA
 from model import BACPI_DEEPCCA_NOECFP
 import random
-torch.manual_seed(0)
-random.seed(0)
-np.random.seed(0)
+
 
 args = argparse.ArgumentParser(description='Argparse for compound-protein interactions prediction')
 args.add_argument('-task', type=str, default='interaction', help='affinity/interaction')
@@ -179,7 +177,9 @@ def load_new_feature(datadir, target_type, datapack):
     return datapack
 
 if __name__ == '__main__':
-    
+    torch.manual_seed(0)
+    random.seed(0)
+    np.random.seed(0)
     print('params: ', params)
     task = params.task
     dataset = params.dataset
