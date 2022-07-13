@@ -13,7 +13,7 @@ from data_process import training_data_process
 from model import BACPI_DEEPCCA
 from model import BACPI_DEEPCCA_NOECFP
 import random
-
+import  absl
 
 args = argparse.ArgumentParser(description='Argparse for compound-protein interactions prediction')
 args.add_argument('-task', type=str, default='interaction', help='affinity/interaction')
@@ -176,10 +176,22 @@ def load_new_feature(datadir, target_type, datapack):
     datapack.append(new_feature)
     return datapack
 
+
+def torch_fix_seed(seed=42):
+    # Python random
+    random.seed(seed)
+    # Numpy
+    np.random.seed(seed)
+    # Pytorch
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.use_deterministic_algorithms = True
+
+
 if __name__ == '__main__':
-    torch.manual_seed(0)
-    random.seed(0)
-    np.random.seed(0)
+    torch_fix_seed()
+
     print('params: ', params)
     task = params.task
     dataset = params.dataset
