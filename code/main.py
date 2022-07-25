@@ -12,6 +12,7 @@ from utils import *
 from data_process import training_data_process
 from model import BACPI_DEEPCCA
 from model import BACPI_DEEPCCA_NOECFP
+from model import BACPI_DEEPCCA_NOECFP_DIM20
 import random
 import  absl
 
@@ -224,7 +225,7 @@ if __name__ == '__main__':
     amino_dict = pickle.load(open(data_dir + '/amino_dict', 'rb'))
 
     print('training...')
-    model = BACPI_DEEPCCA(task, len(atom_dict), len(amino_dict), params)
+    model = BACPI_DEEPCCA_NOECFP_DIM20(task, len(atom_dict), len(amino_dict), params)
     model.to(device)
     res = train_eval(model, task, train_data, dev_data, test_data, device, params)
 
